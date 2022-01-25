@@ -1,0 +1,216 @@
+openapi: 3.0.2
+info:
+  title: Customer API
+  description: This is the Customer API.
+  version: '1.0.0'
+paths:
+  /customer:
+    get:
+      summary: reads a customer's data
+      operationId: getCustomer
+      description: >-
+        The operation provides a view of the customer's data in JSON.  The
+        operation uses the customerId to identify customer in a query string
+      parameters:
+        - in: query
+          name: active
+          description: filter by status
+          required: false
+          schema:
+            type: boolean
+        - in: query
+          name: region
+          description: filter by region
+          required: false
+          schema:
+            $ref: '#/components/schemas/Region'
+      responses:
+        '200':
+          description: search results match
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+        '404':
+          description: customer with this id does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: adds a new customer
+      operationId: addCustomer
+      description: Add a new customer to the system
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Customer'
+        description: the new customer data in JSON
+        required: true
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '405':
+          description: Invaliad Input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /customer/{customerId}:
+    get:
+      summary: get specific customer
+      operationId: getSpecificCustomer
+      description: Get the specific customer by customer id
+      parameters:
+        - in: path
+          name: customerId
+          description: the id of the customer to get
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: The customer is found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: update existing customer
+      operationId: updateCustomer
+      description: Updates an existing customer
+      parameters:
+        - in: path
+          name: customerId
+          description: the id of the customer to update
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Customer'
+        description: the updated customer data in JSON
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '404':
+          description: Customer Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: delete an existing customer
+      operationId: deleteCustomer
+      description: Deletes an existing customer in system
+      parameters:
+        - in: path
+          name: customerId
+          description: the id of the customer to be delete
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: The customer was deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+security:
+  - BasicAuth: []
+servers:
+  - url: https://api.globalmantics.com/crm/v1
+    description: Internal Production
+  - url: https://stagging.globalmantics.com/crm/v1
+    description: Internal Stagging
+  - url: https://development.globalmantics.com/crm/v1
+    description: Internal Development
+  - url: https://{customerId}.globalmantics.com/crm/{version}
+    description: Customer Production
+    variables:
+      customerId:
+        default: demo
+        description: the customer id for subdomain
+      version:
+        default: v1
+        enum:
+          - v1
+          - v2
+          - v3-beta
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    Success:
+      type: object
+      properties:
+        message:
+          type: string
+    Error:
+      type: object
+      properties:
+        errorMessage:
+          type: string
+    Customer:
+      type: object
+      properties:
+        customerId:
+          type: integer
+        region:
+          $ref: '#/components/schemas/Region'
+        customerName:
+          type: string
+        active:
+          type: boolean
+    Region:
+      type: string
+      enum: ['NA', 'AP', 'EU']
